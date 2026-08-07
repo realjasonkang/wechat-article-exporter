@@ -77,16 +77,16 @@ function fmtDate(ms?: number | null) {
       API 以供接入。
     </p>
 
-    <!-- 计费提示（仅开启会员/限速时显示）-->
+    <!-- 下线提示（仅公开托管站显示；fork 私有部署 API 正常可用）-->
     <div
       v-if="membership.enabled"
-      class="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30"
+      class="flex gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-900/50 dark:bg-rose-950/30"
     >
-      <UIcon name="i-lucide:info" class="mt-0.5 size-5 shrink-0 text-amber-500" />
-      <p class="text-sm text-amber-800 dark:text-amber-200">
-        所有公开接口按调用频率分为<span class="font-semibold">「免费」</span>与<span class="font-semibold">「会员」</span
-        >两档；开通会员（<span class="font-semibold">¥{{ membership.price }} / 天</span
-        >）可大幅提升频率上限，详见下方「会员授权」。调用量很大的话，推荐私有部署。
+      <UIcon name="i-lucide:alert-triangle" class="mt-0.5 size-5 shrink-0 text-rose-500" />
+      <p class="text-sm text-rose-800 dark:text-rose-200">
+        <span class="font-semibold">本站 API 已下线。</span>
+        公开 API 不再对外开放，已停止受理新的会员开通与技术支持。已持有密钥 /
+        令牌的用户仍可继续调用现有接口，但不再保证可用性；有稳定调用需求请自行私有部署。以下文档与调试工具仅供存量用户参考。
       </p>
     </div>
 
@@ -120,81 +120,46 @@ function fmtDate(ms?: number | null) {
       </div>
     </section>
 
-    <!-- 会员授权（付费，仅开启会员/限速时显示）-->
+    <!-- 会员授权（已停止开通，仅存量令牌，仅开启会员/限速时显示）-->
     <section v-if="membership.enabled" class="rounded-xl border border-gray-200 p-5 dark:border-gray-800">
       <h3 class="mb-4 flex items-center gap-2 text-xl font-semibold">
         <UIcon name="i-lucide:crown" class="text-amber-500" />
         <span>会员授权</span>
-        <UBadge color="amber" variant="soft" size="xs" class="ml-1">付费</UBadge>
+        <UBadge color="gray" variant="soft" size="xs" class="ml-1">已停止开通</UBadge>
       </h3>
 
-      <div class="grid gap-5 lg:grid-cols-3">
-        <!-- 左：定价 + 频率对比 + 用法 -->
-        <div class="space-y-4 lg:col-span-2">
-          <!-- 定价 -->
-          <div
-            class="flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/40 px-5 py-4 dark:from-amber-950/30 dark:to-amber-900/10"
-          >
-            <div>
-              <p class="font-medium text-gray-800 dark:text-gray-100">开通会员 · 所有接口频率大幅提升</p>
-              <p class="mt-0.5 text-sm text-gray-500">微信加好友，按天购买，随时开通</p>
-            </div>
-            <p class="shrink-0 text-3xl font-bold text-amber-600 dark:text-amber-400">
-              ¥{{ membership.price }}<span class="text-base font-normal text-gray-400"> / 天</span>
-            </p>
-          </div>
-
-          <!-- 频率对比表 -->
-          <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50 text-xs text-gray-500 dark:bg-gray-900">
-                <tr>
-                  <th class="px-4 py-2.5 text-left font-medium">接口</th>
-                  <th class="px-4 py-2.5 text-center font-medium">游客 · 免费</th>
-                  <th class="px-4 py-2.5 text-center font-medium text-amber-600 dark:text-amber-400">
-                  会员 · ¥{{ membership.price }}/天
-                </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                <tr v-for="t in tiers" :key="t.name">
-                  <td class="px-4 py-3">
-                    <p class="font-medium">{{ t.name }}</p>
-                    <p class="mt-0.5 text-xs text-gray-400">{{ t.desc }}</p>
-                  </td>
-                  <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{{ t.guest }}</td>
-                  <td class="px-4 py-3 text-center font-semibold text-amber-700 dark:text-amber-300">{{ t.member }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- 用法 -->
-          <div class="space-y-1.5 text-sm">
-            <p>
-              会员调用时，在请求头携带专属令牌：<code
-                class="rounded bg-gray-100 px-1 font-mono text-rose-500 dark:bg-gray-800"
-                >X-Api-Token: 你的令牌</code
-              >
-            </p>
-            <p class="text-gray-500">令牌按购买天数发放，到期后自动降级为游客速率。查询类接口仍需登录密钥（X-Auth-Key）。</p>
-          </div>
+      <div class="space-y-4">
+        <!-- 频率对比表 -->
+        <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-xs text-gray-500 dark:bg-gray-900">
+              <tr>
+                <th class="px-4 py-2.5 text-left font-medium">接口</th>
+                <th class="px-4 py-2.5 text-center font-medium">游客 · 免费</th>
+                <th class="px-4 py-2.5 text-center font-medium text-amber-600 dark:text-amber-400">会员</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+              <tr v-for="t in tiers" :key="t.name">
+                <td class="px-4 py-3">
+                  <p class="font-medium">{{ t.name }}</p>
+                  <p class="mt-0.5 text-xs text-gray-400">{{ t.desc }}</p>
+                </td>
+                <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-300">{{ t.guest }}</td>
+                <td class="px-4 py-3 text-center font-semibold text-amber-700 dark:text-amber-300">{{ t.member }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- 右：购买卡片 -->
-        <div
-          class="flex flex-col items-center rounded-xl border border-amber-200 bg-amber-50/40 p-5 text-center dark:border-amber-900/50 dark:bg-amber-950/20"
-        >
-          <p class="mb-3 text-sm font-medium">微信扫码加好友开通</p>
-          <img :src="membership.qr" alt="微信二维码" class="size-40 rounded-lg border bg-white object-contain" />
-          <p class="mt-3 text-xs text-gray-500">扫码加好友，备注「{{ membership.wechatNote }}」</p>
-          <div class="mt-4 flex flex-wrap items-center justify-center gap-1.5 text-xs text-gray-400">
-            <span>加好友</span>
-            <UIcon name="i-lucide:arrow-right" class="size-3" />
-            <span>线下付款</span>
-            <UIcon name="i-lucide:arrow-right" class="size-3" />
-            <span>领取令牌</span>
-          </div>
+        <!-- 用法 -->
+        <div class="space-y-1.5 text-sm">
+          <p>
+            会员调用时，在请求头携带专属令牌：<code class="rounded bg-gray-100 px-1 font-mono text-rose-500 dark:bg-gray-800"
+              >X-Api-Token: 你的令牌</code
+            >
+          </p>
+          <p class="text-gray-500">令牌到期后自动降级为游客速率。查询类接口仍需登录密钥（X-Auth-Key）。</p>
         </div>
       </div>
 

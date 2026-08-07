@@ -1,0 +1,45 @@
+# 自动部署 wechat-article-exporter 到 Cloudflare Workers（push 到 master 触发）
+#
+# 前置：在 GitHub 仓库 Settings → Secrets and variables → Actions 配置：
+#   Secrets:
+#     CLOUDFLARE_API_TOKEN  —— Cloudflare API Token（模板 "Edit Cloudflare Workers"，Account 选本账号、
+#                              Zone 选 mptext.top；用于部署 worker + down.mptext.top 自定义域）
+#     NUXT_AGGRID_LICENSE   —— AG-Grid 企业版授权（不填则表格有水印，不影响功能）
+#   Variables（可选）:
+#     NUXT_PUBLIC_MEMBERSHIP_ENABLED  —— 是否开启会员/限流层。默认（不设）关闭：
+#                                        fork 私有部署留空即可，无限速、无下线提示。
+#                                        仅官方公开部署需在仓库 Variables 里设为 "true"。
+#
+# 说明：
+# - 会员/限流开关在「构建期」烘入产物；开源项目默认关闭，fork 后不设该变量即不限速。
+# - 运行时绑定（KV / ratelimits / worker_loader）在 wrangler.toml 声明，CI 不碰。
+# - 运行时 secrets（若有 DEBUG_KEY 等）用 `wrangler secret put` 单独管理，已存在于线上 worker。
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build (Cloudflare preset)
+        run: yarn build:cf
+        env:
+          NUXT_PUBLIC_MEMBERSHIP_ENABLED: ${{ vars.NUXT_PUBLIC_MEMBERSHIP_ENABLED }}
+          NUXT_AGGRID_LICENSE: ${{ secrets.NUXT_AGGRID_LICENSE }}
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # 必须用支持 [[ratelimits]] 和 [[worker_loaders]] 的 wrangler 版本，
+          # 否则旧版会静默忽略这两个绑定（限流失效、LOADER 缺失，json 下载拿不到 cgiData）
+          wranglerVersion: '4.112.0'

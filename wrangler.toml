@@ -47,3 +47,6 @@ simple = { limit = 1, period = 60 } # 游客：1 次 / 分钟（按 IP）
 name = "RL_MEMBER_DOWNLOAD"
 namespace_id = "1004"
 simple = { limit = 60, period = 60 } # 会员：60 次 / 分钟（按 token）
+
+# 说明：cgiData 脚本沙箱已改为主 Worker 内的 QuickJS-WASM 执行（shared/utils/cgi-sandbox.ts），
+# 不再使用 Dynamic Workers（worker_loader），因此移除了原先的 [[worker_loaders]] LOADER 绑定以停止其计费。

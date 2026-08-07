@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio';
-import { EXTERNAL_API_SERVICE } from '~/config';
 import { extractCommentId } from '~/utils/comment';
 
 /**
@@ -178,56 +177,30 @@ function parseCgiDataNewOnClient(html: string): Promise<any> {
 }
 
 /**
- * 从 html 中提取 cgiDataNew 对象
- * @deprecated Cloudflare 平台禁止任何动态执行脚本，故本方法在 CF 平台无效
- * @param html 文章的完整 html 内容
- * @return window.cgiDataNew 对象，解析失败时返回 null
- */
-function parseCgiDataNewOnServerDeprecated(html: string): Promise<any> {
-  const code = extractCgiScript(html);
-  if (!code) {
-    return Promise.resolve(null);
-  }
-
-  // 1. 创建沙箱
-  const sandbox: any = {
-    window: {},
-    console: { log: () => {}, error: () => {} }, // 可选：屏蔽 console
-    // 如果脚本依赖其他全局，可在这里 mock（如 Date, Math 等已存在）
-  };
-  sandbox.window = sandbox; // 关键：让 window.xxx 落入沙箱
-
-  // 2. 执行代码（new Function 比 eval 稍安全）
-  const func = new Function('window', code);
-  func(sandbox.window);
-
-  return sandbox.cgiDataNew || sandbox.window?.cgiDataNew;
-}
-
-/**
- * 从 html 中提取 cgiDataNew 对象
+ * 从 html 中提取 cgiDataNew 对象（服务端）。
+ * 用 QuickJS-WASM 沙箱在主 Worker 内执行 cgi 脚本（node / CF workerd 通用），不再依赖 Dynamic Workers。
  * @param html 文章的完整 html 内容
  * @return window.cgiDataNew 对象，解析失败时返回 null
  */
 async function parseCgiDataNewOnServer(html: string): Promise<any> {
   const code = extractCgiScript(html);
   if (!code) {
-    return Promise.resolve(null);
+    return null;
   }
 
   try {
-    const data = await fetch(`${EXTERNAL_API_SERVICE}/api/tools/eval-js-code`, {
-      method: 'POST',
-      body: code,
-    }).then(res => res.json());
-    if (data && data.executionError === null) {
-      return data.window.cgiDataNew;
+    // 仅服务端动态引入沙箱，避免 QuickJS wasm 被打进客户端 SPA bundle（客户端走 iframe 路径）。
+    // 用 !process.client 作守卫：客户端构建时 process.client=true → 该分支被静态消除（wasm 不进客户端）；
+    // 服务端(Nitro/workerd) 及纯 node 测试环境下条件为真 → 正常执行。
+    if (!process.client) {
+      const { evalCgiViaQuickJS } = await import('./cgi-sandbox');
+      return await evalCgiViaQuickJS(code);
     }
     return null;
   } catch (error) {
     console.error(error);
+    return null;
   }
-  return null;
 }
 
 /**

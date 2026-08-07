@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import type { ChipColor } from '#ui/types';
 import CredentialsDialog, { type CredentialState } from '~/components/global/CredentialsDialog.vue';
-import QQGroupModal from '~/components/modal/QQGroup.vue';
 import { docsWebSite } from '~/config';
 import { gotoLink } from '~/utils';
-
-const modal = useModal();
 
 // CredentialDialog 相关变量
 const credentialsDialogOpen = ref(false);
@@ -34,14 +31,24 @@ const isCredentialActive = computed(() => credentialState.value === 'active');
 
 <template>
   <ul class="hidden md:flex items-center gap-5">
-    <!-- 商业版「公号三刀」 -->
+    <!-- 「公号三刀」 -->
     <li>
-      <UTooltip text="商业版 · 公号三刀（更稳定 · 免代理）">
-        <UIcon
+      <UTooltip text="可尝试「公号三刀」抓取非群发等少量文章">
+        <!-- 「公号三刀」logo（圆角方块 + 三道刃）的单色线稿版，与相邻 lucide 图标风格统一 -->
+        <svg
           @click="gotoLink('https://github.com/zoro-build/wechat')"
-          name="i-lucide:crown"
-          class="size-7 text-amber-400 hover:text-amber-500 cursor-pointer transition-colors"
-        />
+          class="size-7 text-zinc-400 hover:text-blue-500 cursor-pointer transition-colors"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="4" />
+          <path d="M8 7.5v9M12 7.5v9M16 7.5v9" />
+        </svg>
       </UTooltip>
     </li>
 
@@ -53,16 +60,6 @@ const isCredentialActive = computed(() => credentialState.value === 'active');
     <!--        </UChip>-->
     <!--      </UTooltip>-->
     <!--    </li>-->
-
-    <li>
-      <UTooltip text="加入QQ群">
-        <UIcon
-          @click="modal.open(QQGroupModal)"
-          name="i-tdesign:logo-qq-filled"
-          class="size-7 text-zinc-400 hover:text-blue-500 cursor-pointer transition-colors"
-        />
-      </UTooltip>
-    </li>
 
     <!-- Credential -->
     <li>

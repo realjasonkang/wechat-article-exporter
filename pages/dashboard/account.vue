@@ -534,6 +534,12 @@ const { getActualDateRange } = useSyncDeadline();
         </div>
       </header>
 
+      <!-- 同步失效提示 -->
+      <div class="flex flex-shrink-0 items-center gap-2 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
+        <UIcon name="i-lucide:alert-triangle" class="size-4 shrink-0" />
+        <span>微信已关闭历史文章列表接口，「同步」当前无法拉取新数据；已同步的文章仍可正常下载和导出。</span>
+      </div>
+
       <!-- 数据表格 -->
       <ag-grid-vue
         style="width: 100%; height: 100%"
